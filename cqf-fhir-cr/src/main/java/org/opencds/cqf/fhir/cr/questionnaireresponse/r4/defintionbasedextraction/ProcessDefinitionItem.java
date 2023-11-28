@@ -8,7 +8,7 @@ import org.hl7.fhir.r4.model.Extension;
 import org.hl7.fhir.r4.model.Resource;
 import org.opencds.cqf.fhir.cql.CqfExpression;
 import org.opencds.cqf.fhir.cql.LibraryEngine;
-import org.opencds.cqf.fhir.cr.questionnaireresponse.r4.ProcessParameters;
+import org.opencds.cqf.fhir.cr.questionnaireresponse.r4.processparameters.ProcessParameters;
 import org.opencds.cqf.fhir.utility.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +38,7 @@ public class ProcessDefinitionItem {
         final Extension itemExtractionContext = getItemExtractionContext(processParameters);
         if (itemExtractionContext != null) {
             final Expression contextExpression = (Expression) itemExtractionContext.getValue();
-            final List<IBase> context = getExpressionResult(contextExpression, processParameters.getItem().getLinkId());
+            final List<IBase> context = getExpressionResult(contextExpression, processParameters.getItemResolver().getLinkId());
             if (context != null && !context.isEmpty()) {
                 // TODO: edit context instead of creating new resources
             }
@@ -48,10 +48,10 @@ public class ProcessDefinitionItem {
     @Nullable
     Extension getItemExtractionContext(ProcessParameters processParameters) {
         final String contextExtension = Constants.SDC_QUESTIONNAIRE_ITEM_EXTRACTION_CONTEXT;
-        if (processParameters.getItem().hasExtension(contextExtension)) {
-            return processParameters.getItem().getExtensionByUrl(contextExtension);
+        if (processParameters.getItemResolver().hasExtension(contextExtension)) {
+            return processParameters.getItemResolver().getExtensionByUrl(contextExtension);
         }
-        return processParameters.getQuestionnaireResponse().getExtensionByUrl(contextExtension);
+        return processParameters.getQuestionnaireResponseResolver().getExtensionByUrl(contextExtension);
     }
 
     private List<IBase> getExpressionResult(Expression expression, String itemLinkId) {

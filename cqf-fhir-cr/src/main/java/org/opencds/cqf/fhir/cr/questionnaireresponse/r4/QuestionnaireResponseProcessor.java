@@ -1,6 +1,7 @@
 package org.opencds.cqf.fhir.cr.questionnaireresponse.r4;
 
 import java.util.List;
+import org.hl7.fhir.instance.model.api.IBaseBackboneElement;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IIdType;
@@ -72,7 +73,7 @@ public class QuestionnaireResponseProcessor extends BaseQuestionnaireResponsePro
 
     @Override
     public List<IBaseResource> processItems(QuestionnaireResponse questionnaireResponse) {
-        return processorService.processItems(questionnaireResponse);
+        return processorService.processItems((IBaseBackboneElement) questionnaireResponse);
     }
 }
 

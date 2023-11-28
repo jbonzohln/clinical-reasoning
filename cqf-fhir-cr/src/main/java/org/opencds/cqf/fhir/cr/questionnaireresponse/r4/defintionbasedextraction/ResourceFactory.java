@@ -5,7 +5,7 @@ import org.hl7.fhir.r4.model.Meta;
 import org.hl7.fhir.r4.model.Property;
 import org.hl7.fhir.r4.model.Resource;
 import org.opencds.cqf.fhir.cr.questionnaireresponse.common.ProcessorHelper;
-import org.opencds.cqf.fhir.cr.questionnaireresponse.r4.ProcessParameters;
+import org.opencds.cqf.fhir.cr.questionnaireresponse.r4.processparameters.ProcessParameters;
 
 import java.util.List;
 
@@ -15,7 +15,7 @@ class ResourceFactory {
     private final PropertyHelper propertyHelper = new PropertyHelper();
 
     Resource makeResource(ProcessParameters processParameters) {
-        final String resourceType = getResourceType(processParameters.getItem().getDefinition());
+        final String resourceType = getResourceType(processParameters.getItemResolver().getDefinition());
         final Resource baseResource = (Resource) processorHelper.newValue(resourceType);
         final IdType id = makeId(processParameters, resourceType);
         final Meta meta = makeMeta(processParameters);
@@ -25,20 +25,20 @@ class ResourceFactory {
         return new ResourceBuilder()
             .setBaseResource(baseResource)
             .setResourceType(resourceType)
-            .setAuthoredDate(processParameters.getQuestionnaireResponse().getAuthored())
-            .setQuestionnaireResponseItem(processParameters.getItem())
+            .setAuthoredDate(processParameters.getQuestionnaireResponseResolver().getAuthored())
+            .setQuestionnaireResponseItem(processParameters.getItemResolver())
             .setId(id)
             .setMeta(meta)
             .setSubjectProperty(subjectProperty)
-            .setSubjectPropertyValue(processParameters.getSubject())
+            .setSubjectPropertyValue(processParameters.getSubjectResolver())
             .setAuthorProperty(authorProperty)
-            .setAuthorPropertyValue(processParameters.getQuestionnaireResponse().getAuthor())
+            .setAuthorPropertyValue(processParameters.getQuestionnaireResponseResolver().getAuthor())
             .setDateProperties(dateProperties)
             .build();
     }
 
     private IdType makeId(ProcessParameters processParameters, String resourceType) {
-        final String id = processorHelper.getExtractId(processParameters.getQuestionnaireResponse()) + "-" + processParameters.getItem().getLinkId();
+        final String id = processorHelper.getExtractId(processParameters.getQuestionnaireResponseResolver()) + "-" + processParameters.getItemResolver().getLinkId();
         return new IdType(resourceType, id);
     }
 
@@ -50,7 +50,7 @@ class ResourceFactory {
     }
 
     private Meta makeMeta(ProcessParameters processParameters) {
-        final String definition = processParameters.getItem().getDefinition();
+        final String definition = processParameters.getItemResolver().getDefinition();
         final Meta meta = new Meta();
         // Consider setting source and lastUpdated here?
         if (definition != null && !definition.isEmpty()) {
