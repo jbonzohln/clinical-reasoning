@@ -1,22 +1,15 @@
 package org.opencds.cqf.fhir.cr.questionnaireresponse.r4.processparameters;
 
+import org.hl7.fhir.Resource;
 import org.hl7.fhir.instance.model.api.IBaseBackboneElement;
 import org.hl7.fhir.instance.model.api.IBaseCoding;
 import org.hl7.fhir.instance.model.api.IBaseReference;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r4.model.Coding;
-import org.hl7.fhir.r4.model.QuestionnaireResponse;
-import org.hl7.fhir.r4.model.QuestionnaireResponse.QuestionnaireResponseItemComponent;
-import org.hl7.fhir.r4.model.Reference;
-import org.opencds.cqf.fhir.cr.questionnaireresponse.resolvers.r4.CodingResolver;
-import org.opencds.cqf.fhir.cr.questionnaireresponse.resolvers.r4.QuestionnaireResponseItemComponentResolver;
-import org.opencds.cqf.fhir.cr.questionnaireresponse.resolvers.r4.QuestionnaireResponseResolver;
-import org.opencds.cqf.fhir.cr.questionnaireresponse.resolvers.r4.ReferenceResolver;
 import java.util.List;
 import java.util.Map;
 
 public class ProcessParameters {
-    private final IBaseBackboneElement questionnaireResponseItem;
+    private IBaseBackboneElement questionnaireResponseItem;
     private final IBaseBackboneElement questionnaireResponse;
     private IBaseReference subject;
     private final List<IBaseResource> resources;
@@ -57,5 +50,12 @@ public class ProcessParameters {
 
     public void setSubject(IBaseReference reference) {
         this.subject = reference;
+    }
+    public void setQuestionnaireResponseItem(IBaseBackboneElement item) {
+        this.questionnaireResponseItem = item;
+    }
+
+    public void addToResources(IBaseResource resource) {
+        this.resources.add(resource);
     }
 }

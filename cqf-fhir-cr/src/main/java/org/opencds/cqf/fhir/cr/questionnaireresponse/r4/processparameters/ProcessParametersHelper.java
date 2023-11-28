@@ -19,8 +19,12 @@ public class ProcessParametersHelper {
     Repository repository;
     DynamicValueProcessor dynamicValueProcessor;
     QuestionnaireCodeMapHelper questionnaireCodeMapHelper;
-    public ProcessParameters createParameters(IBaseBackboneElement questionnaireResponse,
-        IBaseBackboneElement questionnaireResponseItem, List<IBaseResource> resources) {
+    @Nonnull
+    public ProcessParameters createParameters(
+        IBaseBackboneElement questionnaireResponse,
+        IBaseBackboneElement questionnaireResponseItem,
+        List<IBaseResource> resources
+    ) {
         final IBaseReference subject = (IBaseReference) dynamicValueProcessor.getDynamicValue(questionnaireResponse, "subject");
         final Optional<IBaseBackboneElement> questionnaire = getQuestionnaire(questionnaireResponse);
         final Map<String, List<IBaseCoding>> questionnaireCodeMap = questionnaire

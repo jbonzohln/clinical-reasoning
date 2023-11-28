@@ -21,33 +21,38 @@ public class GroupProcessor {
     ProcessorHelper processorHelper;
 
     void processGroupItem(ProcessParameters processParameters) {
+        final ProcessParameters updatedProcessParameters = updateProcessParameters(processParameters);
+        final boolean hasDefinition = dynamicValueProcessor.hasValue(processParameters.getQuestionnaireResponseItem(), "answer");
+        if (hasDefinition) {
+            processDefinitionItem.process(updatedProcessParameters);
+        } else {
+            final List<IBaseBackboneElement> childItems = dynamicValueProcessor.getDynamicValues(
+                updatedProcessParameters.getQuestionnaireResponseItem(),
+                "item"
+            );
+            childItems.forEach(childItem -> processChildItem(updatedProcessParameters, childItem));
+        }
+    }
+
+    void processChildItem(ProcessParameters processParameters, IBaseBackboneElement childItem) {
+        final boolean hasSubjectExtension = processorHelper.hasExtension(childItem, Constants.SDC_QUESTIONNAIRE_RESPONSE_IS_SUBJECT);
+        if (!hasSubjectExtension) {
+            if (dynamicValueProcessor.hasChildItems(childItem, "item")) {
+                processGroupItem(processParameters);
+            } else {
+                processObservationItem.process(processParameters);
+            }
+        }
+    }
+
+    @Nonnull
+    ProcessParameters updateProcessParameters(ProcessParameters processParameters) {
         final IBaseReference groupSubject = getGroupSubject(
             processParameters.getQuestionnaireResponseItem(),
             processParameters.getSubject()
         );
         processParameters.setSubject(groupSubject);
-        final IBaseBackboneElement definition = dynamicValueProcessor.getDynamicValue(
-            processParameters.getQuestionnaireResponseItem(),
-            "answer"
-        );
-        if (definition != null) {
-            processDefinitionItem.process(processParameters);
-        } else {
-            final List<IBaseBackboneElement> childItems = dynamicValueProcessor.getDynamicValues(
-                processParameters.getQuestionnaireResponseItem(),
-                "item"
-            );
-            childItems.forEach(childItem -> {
-                final boolean hasSubjectExtension = processorHelper.hasExtension(childItem, Constants.SDC_QUESTIONNAIRE_RESPONSE_IS_SUBJECT);
-                if (!hasSubjectExtension) {
-                    if (dynamicValueProcessor.hasChildItems(childItem, "item")) {
-                        processGroupItem(processParameters);
-                    } else {
-                        processObservationItem.process(processParameters);
-                    }
-                }
-            });
-        }
+        return processParameters;
     }
 
     @Nonnull

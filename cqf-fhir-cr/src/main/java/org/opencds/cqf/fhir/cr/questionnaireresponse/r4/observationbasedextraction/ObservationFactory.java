@@ -1,5 +1,6 @@
 package org.opencds.cqf.fhir.cr.questionnaireresponse.r4.observationbasedextraction;
 
+import org.hl7.fhir.instance.model.api.IBaseBackboneElement;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.DateTimeType;
@@ -14,6 +15,7 @@ import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.StringType;
 import org.hl7.fhir.r4.model.Type;
 import org.opencds.cqf.fhir.cr.questionnaireresponse.common.ProcessorHelper;
+import org.opencds.cqf.fhir.cr.questionnaireresponse.r4.processparameters.ProcessParameters;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -24,11 +26,8 @@ class ObservationFactory {
     static final ObservationStatus status = Observation.ObservationStatus.FINAL;
 
     final Observation makeObservation(
-        QuestionnaireResponseItemAnswerComponent answer,
-        String linkId,
-        QuestionnaireResponse questionnaireResponse,
-        Reference subject,
-        Map<String, List<Coding>> questionnaireCodeMap
+        IBaseBackboneElement answer,
+        ProcessParameters processParameters
     ) {
         final String id = getId(questionnaireResponse, linkId);
         final List<Reference> basedOn = getBasedOn(questionnaireResponse);

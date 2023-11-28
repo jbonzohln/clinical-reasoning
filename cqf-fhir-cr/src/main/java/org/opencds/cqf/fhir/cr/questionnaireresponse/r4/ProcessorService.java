@@ -16,16 +16,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProcessorService {
-    Repository repository;
     ProcessObservationItem processObservationItem;
     ProcessDefinitionItem processDefinitionItem;
     DynamicValueProcessor dynamicValueProcessor;
     ProcessParametersHelper processParametersHelper;
     GroupProcessor groupProcessor;
-
     ProcessorHelper processorHelper;
 
-    ProcessorService() {
+    ProcessorService(Repository repository) {
         final ModelResolver modelResolver = FhirModelResolverCache.resolverForVersion(
             repository.fhirContext().getVersion().getVersion());
         this.dynamicValueProcessor = new DynamicValueProcessor(modelResolver);
@@ -36,10 +34,10 @@ public class ProcessorService {
         final List<IBaseBackboneElement> questionnaireResponseItems = dynamicValueProcessor.getDynamicValues(questionnaireResponse, "item");
         questionnaireResponseItems.forEach(item -> {
             final ProcessParameters processParameters = processParametersHelper.createParameters(questionnaireResponse, item, resources);
-            final List<IBaseBackboneElement> childItems = dynamicValueProcessor.getDynamicValues(item, "item");
+            final boolean hasChildItems = dynamicValueProcessor.hasChildItems(item, "item");
             if (processDefinitionBased(questionnaireResponse, item)) {
                 processDefinitionItem.process(processParameters);
-            } else if (!childItems.isEmpty()) {
+            } else if (hasChildItems) {
                 groupProcessor.processGroupItem(processParameters);
             } else {
                 processObservationItem.process(processParameters);
