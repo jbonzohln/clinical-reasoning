@@ -2,7 +2,7 @@ package org.opencds.cqf.fhir.cr.questionnaireresponse.r4.processparameters;
 
 import org.hl7.fhir.instance.model.api.IBaseBackboneElement;
 import org.hl7.fhir.instance.model.api.IBaseCoding;
-import org.opencds.cqf.fhir.cr.questionnaireresponse.common.DynamicValueProcessor;
+import org.opencds.cqf.fhir.cr.questionnaireresponse.common.ModelResolverService;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 class QuestionnaireCodeMapHelper {
-    DynamicValueProcessor dynamicValueProcessor;
+    ModelResolverService modelResolverService;
 
     public static class QuestionnaireCodeMap {
         private final String linkId;
@@ -29,7 +29,7 @@ class QuestionnaireCodeMapHelper {
     }
     @Nonnull
     Map<String, List<IBaseCoding>> createCodeMap(@Nonnull IBaseBackboneElement questionnaire) {
-        final List<IBaseBackboneElement> questionnaireItems = dynamicValueProcessor.getDynamicValues(questionnaire, "entry");
+        final List<IBaseBackboneElement> questionnaireItems = modelResolverService.getDynamicValues(questionnaire, "entry");
         final List<QuestionnaireCodeMap> questionnaireCodeMap = questionnaireItems.stream()
             .map(this::buildQuestionnaireCodeMap)
             .flatMap(List::stream)
@@ -45,15 +45,15 @@ class QuestionnaireCodeMapHelper {
 
     private List<QuestionnaireCodeMap> buildQuestionnaireCodeMap(IBaseBackboneElement item) {
         final List<QuestionnaireCodeMap> questionnaireCodeMap = new ArrayList<>();
-        final List<IBaseBackboneElement> subItems = dynamicValueProcessor.getDynamicValues(item, "item");
+        final List<IBaseBackboneElement> subItems = modelResolverService.getDynamicValues(item, "item");
         if (!subItems.isEmpty()) {
             subItems.forEach(subItem -> {
                 final List<QuestionnaireCodeMap> codeMap = buildQuestionnaireCodeMap(subItem);
                 questionnaireCodeMap.addAll(codeMap);
             });
         } else {
-            final String linkId = dynamicValueProcessor.getDynamicStringValue(item, "linkId");
-            final IBaseBackboneElement code = dynamicValueProcessor.getDynamicValue(item, "code");
+            final String linkId = modelResolverService.getDynamicStringValue(item, "linkId");
+            final IBaseBackboneElement code = modelResolverService.getDynamicValue(item, "code");
             questionnaireCodeMap.add(new QuestionnaireCodeMap(linkId, (IBaseCoding) code));
 
         }

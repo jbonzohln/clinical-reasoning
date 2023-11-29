@@ -4,37 +4,35 @@ import org.hl7.fhir.instance.model.api.IBaseBackboneElement;
 import org.hl7.fhir.instance.model.api.IBaseCoding;
 import org.hl7.fhir.instance.model.api.IBaseDatatype;
 import org.hl7.fhir.instance.model.api.IBaseElement;
-import org.hl7.fhir.instance.model.api.IBaseExtension;
 import org.hl7.fhir.instance.model.api.IBaseReference;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.BaseDateTimeType;
 import org.hl7.fhir.r4.model.CodeableConcept;
-import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.DateTimeType;
 import org.hl7.fhir.r4.model.DateType;
-import org.hl7.fhir.r4.model.Extension;
 import org.hl7.fhir.r4.model.InstantType;
 import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Observation.ObservationStatus;
 import org.hl7.fhir.r4.model.QuestionnaireResponse;
 import org.hl7.fhir.r4.model.QuestionnaireResponse.QuestionnaireResponseItemAnswerComponent;
-import org.hl7.fhir.r4.model.Reference;
-import org.hl7.fhir.r4.model.StringType;
 import org.hl7.fhir.r4.model.Type;
-import org.opencds.cqf.fhir.cr.questionnaireresponse.common.DynamicValueProcessor;
+import org.opencds.cqf.fhir.api.Repository;
+import org.opencds.cqf.fhir.cr.questionnaireresponse.common.ModelResolverService;
 import org.opencds.cqf.fhir.cr.questionnaireresponse.common.ProcessorHelper;
 import org.opencds.cqf.fhir.cr.questionnaireresponse.r4.processparameters.ProcessParameters;
 import org.opencds.cqf.fhir.cr.questionnaireresponse.resolvers.r4.CodeableConceptResolver;
 import org.opencds.cqf.fhir.cr.questionnaireresponse.resolvers.r4.ExtensionResolver;
 import org.opencds.cqf.fhir.cr.questionnaireresponse.resolvers.r4.ReferenceResolver;
+import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 class ObservationFactory {
+    Repository repository;
     ProcessorHelper processorHelper;
-    DynamicValueProcessor dynamicValueProcessor;
+    ModelResolverService modelResolverService;
     static final ObservationStatus status = Observation.ObservationStatus.FINAL;
 
     final Observation makeObservation(
@@ -77,17 +75,17 @@ class ObservationFactory {
     }
 
     final String getId(ProcessParameters processParameters) {
-        final IBaseBackboneElement linkId = dynamicValueProcessor.getDynamicValue(processParameters.getQuestionnaireResponseItem(), "linkId");
+        final IBaseBackboneElement linkId = modelResolverService.getDynamicValue(processParameters.getQuestionnaireResponseItem(), "linkId");
         final String extractId = processorHelper.getExtractId((IBaseResource) processParameters.getQuestionnaireResponse());
         return extractId + "." + linkId;
     }
 
     final List<IBaseReference> getBasedOn(ProcessParameters processParameters) {
-        return dynamicValueProcessor.getDynamicReferenceValues(processParameters.getQuestionnaireResponseItem(), "basedOn");
+        return modelResolverService.getDynamicReferenceValues(processParameters.getQuestionnaireResponseItem(), "basedOn");
     }
 
     final List<IBaseReference> getPartOf(ProcessParameters processParameters) {
-        return dynamicValueProcessor.getDynamicReferenceValues(processParameters.getQuestionnaireResponseItem(), "partOf");
+        return modelResolverService.getDynamicReferenceValues(processParameters.getQuestionnaireResponseItem(), "partOf");
     }
 
     IBaseDatatype getValue(QuestionnaireResponseItemAnswerComponent answer) {
@@ -105,12 +103,12 @@ class ObservationFactory {
     IBaseElement getLinkExtension(ProcessParameters processParameters) {
         // ROSIE TODO
         // resolver insertion
-        final String linkId = dynamicValueProcessor.getDynamicStringValue(processParameters.getQuestionnaireResponseItem(), "linkId");
+        final String linkId = modelResolverService.getDynamicStringValue(processParameters.getQuestionnaireResponseItem(), "linkId");
         return ExtensionResolver.makeExtension(linkId);
     }
 
     IBaseElement getCode(ProcessParameters processParameters) {
-        final String linkId = dynamicValueProcessor.getDynamicStringValue(processParameters.getQuestionnaireResponseItem(), "linkId");
+        final String linkId = modelResolverService.getDynamicStringValue(processParameters.getQuestionnaireResponseItem(), "linkId");
         final Map<String, List<IBaseCoding>> coding = processParameters.getQuestionnaireCodeMap();
         return CodeableConceptResolver.makeCodeableConcept(coding.get(linkId));
     }
@@ -122,8 +120,18 @@ class ObservationFactory {
         return Collections.singletonList(codeableConcept);
     }
 
+    IBaseElement makeCodeableConcept()
+        throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        return (IBaseElement) repository
+            .fhirContext()
+            .getElementDefinition("CodeableConcept")
+            .getImplementingClass()
+            .getConstructor()
+            .newInstance();
+    }
+
     IBaseReference getEncounter(ProcessParameters processParameters) {
-        return dynamicValueProcessor.getDynamicReferenceValue(processParameters.getQuestionnaireResponse(), "encounter");
+        return modelResolverService.getDynamicReferenceValue(processParameters.getQuestionnaireResponse(), "encounter");
     }
     Type getEffective(QuestionnaireResponse questionnaireResponse) {
         return getAuthoredDate(questionnaireResponse);
@@ -134,7 +142,7 @@ class ObservationFactory {
     }
 
     BaseDateTimeType getAuthoredDate(ProcessParameters processParameters) {
-        final IBaseReference author = dynamicValueProcessor.getDynamicReferenceValue(processParameters.getQuestionnaireResponse(), "authored");
+        final IBaseReference author = modelResolverService.getDynamicReferenceValue(processParameters.getQuestionnaireResponse(), "authored");
         if (author != null) {
             return new DateTimeType(author)
         }
@@ -148,7 +156,7 @@ class ObservationFactory {
     }
 
     List<IBaseReference> getPerformer(ProcessParameters processParameters) {
-        final IBaseReference author = dynamicValueProcessor.getDynamicReferenceValue(processParameters.getQuestionnaireResponse(), "author");
+        final IBaseReference author = modelResolverService.getDynamicReferenceValue(processParameters.getQuestionnaireResponse(), "author");
         return Collections.singletonList(author);
     }
 

@@ -18,6 +18,4 @@ public class CodeableConceptResolver {
         final List<Coding> codings = iBaseCodings.stream().map(Coding.class::cast).collect(Collectors.toList());
         return new CodeableConcept().setCoding(codings);
     }
-
-
 }

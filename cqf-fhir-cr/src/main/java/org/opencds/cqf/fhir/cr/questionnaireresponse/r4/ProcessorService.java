@@ -5,7 +5,7 @@ import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.opencds.cqf.cql.engine.model.ModelResolver;
 import org.opencds.cqf.fhir.api.Repository;
 import org.opencds.cqf.fhir.cql.engine.model.FhirModelResolverCache;
-import org.opencds.cqf.fhir.cr.questionnaireresponse.common.DynamicValueProcessor;
+import org.opencds.cqf.fhir.cr.questionnaireresponse.common.ModelResolverService;
 import org.opencds.cqf.fhir.cr.questionnaireresponse.common.ProcessorHelper;
 import org.opencds.cqf.fhir.cr.questionnaireresponse.r4.defintionbasedextraction.ProcessDefinitionItem;
 import org.opencds.cqf.fhir.cr.questionnaireresponse.r4.observationbasedextraction.ProcessObservationItem;
@@ -18,7 +18,7 @@ import java.util.List;
 public class ProcessorService {
     ProcessObservationItem processObservationItem;
     ProcessDefinitionItem processDefinitionItem;
-    DynamicValueProcessor dynamicValueProcessor;
+    ModelResolverService modelResolverService;
     ProcessParametersHelper processParametersHelper;
     GroupProcessor groupProcessor;
     ProcessorHelper processorHelper;
@@ -26,15 +26,15 @@ public class ProcessorService {
     ProcessorService(Repository repository) {
         final ModelResolver modelResolver = FhirModelResolverCache.resolverForVersion(
             repository.fhirContext().getVersion().getVersion());
-        this.dynamicValueProcessor = new DynamicValueProcessor(modelResolver);
+        this.modelResolverService = new ModelResolverService(modelResolver);
     }
 
     public List<IBaseResource> processItems(IBaseBackboneElement questionnaireResponse) {
         final ArrayList<IBaseResource> resources = new ArrayList<>();
-        final List<IBaseBackboneElement> questionnaireResponseItems = dynamicValueProcessor.getDynamicValues(questionnaireResponse, "item");
+        final List<IBaseBackboneElement> questionnaireResponseItems = modelResolverService.getDynamicValues(questionnaireResponse, "item");
         questionnaireResponseItems.forEach(item -> {
             final ProcessParameters processParameters = processParametersHelper.createParameters(questionnaireResponse, item, resources);
-            final boolean hasChildItems = dynamicValueProcessor.hasChildItems(item, "item");
+            final boolean hasChildItems = modelResolverService.hasChildItems(item, "item");
             if (processDefinitionBased(questionnaireResponse, item)) {
                 processDefinitionItem.process(processParameters);
             } else if (hasChildItems) {
@@ -51,8 +51,8 @@ public class ProcessorService {
         IBaseBackboneElement questionnaireResponseItem
     ) {
         final boolean hasExtension = processorHelper.hasExtension(questionnaireResponse, Constants.SDC_QUESTIONNAIRE_ITEM_POPULATION_CONTEXT);
-        final boolean childItemsExist = dynamicValueProcessor.hasChildItems(questionnaireResponseItem, "item");
-        final boolean hasDefinitionValue = dynamicValueProcessor.hasValue(questionnaireResponseItem, "definition");
+        final boolean childItemsExist = modelResolverService.hasChildItems(questionnaireResponseItem, "item");
+        final boolean hasDefinitionValue = modelResolverService.hasValue(questionnaireResponseItem, "definition");
         return hasExtension || (!childItemsExist && hasDefinitionValue);
     }
 }
