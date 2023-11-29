@@ -26,6 +26,9 @@ public class GroupProcessor {
         if (hasDefinition) {
             processDefinitionItem.process(updatedProcessParameters);
         } else {
+            IBaseBackboneElement
+            processParameters.getQuestionnaireResponse().getItem();
+
             final List<IBaseBackboneElement> childItems = dynamicValueProcessor.getDynamicValues(
                 updatedProcessParameters.getQuestionnaireResponseItem(),
                 "item"
