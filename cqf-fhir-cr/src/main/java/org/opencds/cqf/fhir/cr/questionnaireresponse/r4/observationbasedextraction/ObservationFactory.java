@@ -1,5 +1,6 @@
 package org.opencds.cqf.fhir.cr.questionnaireresponse.r4.observationbasedextraction;
 
+import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseBackboneElement;
 import org.hl7.fhir.instance.model.api.IBaseCoding;
 import org.hl7.fhir.instance.model.api.IBaseDatatype;
@@ -89,7 +90,12 @@ class ObservationFactory {
     }
 
     IBaseDatatype getValue(QuestionnaireResponseItemAnswerComponent answer) {
+
         // ROSIE TODO: I think the fhirType will always be: "Element"
+
+//        answer.getValue()
+//        IBase.fhirType()
+
         switch (answer.getValue().fhirType()) {
             case "Coding":
                 return new CodeableConcept().addCoding(answer.getValueCoding());
