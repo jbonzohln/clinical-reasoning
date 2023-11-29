@@ -52,9 +52,9 @@ class QuestionnaireCodeMapHelper {
                 questionnaireCodeMap.addAll(codeMap);
             });
         } else {
-            final IBaseBackboneElement linkId = dynamicValueProcessor.getDynamicValue(item, "linkId");
+            final String linkId = dynamicValueProcessor.getDynamicStringValue(item, "linkId");
             final IBaseBackboneElement code = dynamicValueProcessor.getDynamicValue(item, "code");
-            questionnaireCodeMap.add(new QuestionnaireCodeMap(linkId.toString(), (IBaseCoding) code));
+            questionnaireCodeMap.add(new QuestionnaireCodeMap(linkId, (IBaseCoding) code));
 
         }
         return questionnaireCodeMap;

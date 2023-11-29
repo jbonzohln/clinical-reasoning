@@ -1,6 +1,13 @@
 package org.opencds.cqf.fhir.cr.questionnaireresponse.r4.observationbasedextraction;
 
 import org.hl7.fhir.instance.model.api.IBaseBackboneElement;
+import org.hl7.fhir.instance.model.api.IBaseCoding;
+import org.hl7.fhir.instance.model.api.IBaseDatatype;
+import org.hl7.fhir.instance.model.api.IBaseElement;
+import org.hl7.fhir.instance.model.api.IBaseExtension;
+import org.hl7.fhir.instance.model.api.IBaseReference;
+import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.r4.model.BaseDateTimeType;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.DateTimeType;
@@ -14,8 +21,12 @@ import org.hl7.fhir.r4.model.QuestionnaireResponse.QuestionnaireResponseItemAnsw
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.StringType;
 import org.hl7.fhir.r4.model.Type;
+import org.opencds.cqf.fhir.cr.questionnaireresponse.common.DynamicValueProcessor;
 import org.opencds.cqf.fhir.cr.questionnaireresponse.common.ProcessorHelper;
 import org.opencds.cqf.fhir.cr.questionnaireresponse.r4.processparameters.ProcessParameters;
+import org.opencds.cqf.fhir.cr.questionnaireresponse.resolvers.r4.CodeableConceptResolver;
+import org.opencds.cqf.fhir.cr.questionnaireresponse.resolvers.r4.ExtensionResolver;
+import org.opencds.cqf.fhir.cr.questionnaireresponse.resolvers.r4.ReferenceResolver;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -23,24 +34,29 @@ import java.util.Map;
 
 class ObservationFactory {
     ProcessorHelper processorHelper;
+    DynamicValueProcessor dynamicValueProcessor;
     static final ObservationStatus status = Observation.ObservationStatus.FINAL;
 
     final Observation makeObservation(
         IBaseBackboneElement answer,
         ProcessParameters processParameters
     ) {
-        final String id = getId(questionnaireResponse, linkId);
-        final List<Reference> basedOn = getBasedOn(questionnaireResponse);
-        final List<Reference> partOf = getPartOf(questionnaireResponse);
-        final List<CodeableConcept> category = getCategory();
-        final CodeableConcept code = getCode(questionnaireCodeMap, linkId);
-        final Reference encounter = getEncounter(questionnaireResponse);
-        final Type effective = getEffective(questionnaireResponse);
-        final InstantType issued = getIssued(questionnaireResponse);
-        final List<Reference> performer = getPerformer(questionnaireResponse);
+        final String id = getId(processParameters);
+        final List<IBaseReference> basedOn = getBasedOn(processParameters);
+        final List<IBaseReference> partOf = getPartOf(processParameters);
+        final List<IBaseElement> category = getCategory();
+        final IBaseElement code = getCode(processParameters);
+        final IBaseReference encounter = getEncounter(processParameters);
+
+        final Type effective = getEffective(processParameters);
+        final InstantType issued = getIssued(processParameters);
+
+        final List<IBaseReference> performer = getPerformer(processParameters);
+
         final Type value = getValue(answer);
-        final List<Reference> derived = getDerivedFrom(questionnaireResponse);
-        final Extension extension = getLinkExtension(linkId);
+
+        final List<IBaseReference> derived = getDerivedFrom(processParameters);
+        final IBaseElement extension = getLinkExtension(processParameters);
         return new ObservationBuilder()
             .id(id)
             .basedOn(basedOn)
@@ -60,19 +76,22 @@ class ObservationFactory {
             .build();
     }
 
-    final String getId(QuestionnaireResponse questionnaireResponse, String linkId) {
-        return processorHelper.getExtractId(questionnaireResponse) + "." + linkId;
+    final String getId(ProcessParameters processParameters) {
+        final IBaseBackboneElement linkId = dynamicValueProcessor.getDynamicValue(processParameters.getQuestionnaireResponseItem(), "linkId");
+        final String extractId = processorHelper.getExtractId((IBaseResource) processParameters.getQuestionnaireResponse());
+        return extractId + "." + linkId;
     }
 
-    final List<Reference> getBasedOn(QuestionnaireResponse questionnaireResponse) {
-        return questionnaireResponse.getBasedOn();
+    final List<IBaseReference> getBasedOn(ProcessParameters processParameters) {
+        return dynamicValueProcessor.getDynamicReferenceValues(processParameters.getQuestionnaireResponseItem(), "basedOn");
     }
 
-    final List<Reference> getPartOf(QuestionnaireResponse questionnaireResponse) {
-        return questionnaireResponse.getPartOf();
+    final List<IBaseReference> getPartOf(ProcessParameters processParameters) {
+        return dynamicValueProcessor.getDynamicReferenceValues(processParameters.getQuestionnaireResponseItem(), "partOf");
     }
 
-    Type getValue(QuestionnaireResponseItemAnswerComponent answer) {
+    IBaseDatatype getValue(QuestionnaireResponseItemAnswerComponent answer) {
+        // ROSIE TODO: I think the fhirType will always be: "Element"
         switch (answer.getValue().fhirType()) {
             case "Coding":
                 return new CodeableConcept().addCoding(answer.getValueCoding());
@@ -83,54 +102,58 @@ class ObservationFactory {
         }
     }
 
-    Extension getLinkExtension(String linkId) {
-        final Extension linkIdExtension = new Extension();
-        linkIdExtension.setUrl("http://hl7.org/fhir/uv/sdc/StructureDefinition/derivedFromLinkId");
-        final Extension innerLinkIdExtension = new Extension();
-        innerLinkIdExtension.setUrl("text");
-        innerLinkIdExtension.setValue(new StringType(linkId));
-        linkIdExtension.setExtension(Collections.singletonList(innerLinkIdExtension));
-        return linkIdExtension;
+    IBaseElement getLinkExtension(ProcessParameters processParameters) {
+        // ROSIE TODO
+        // resolver insertion
+        final String linkId = dynamicValueProcessor.getDynamicStringValue(processParameters.getQuestionnaireResponseItem(), "linkId");
+        return ExtensionResolver.makeExtension(linkId);
     }
 
-    CodeableConcept getCode(Map<String, List<Coding>> questionnaireCodeMap, String linkId) {
-        return new CodeableConcept().setCoding(questionnaireCodeMap.get(linkId));
+    IBaseElement getCode(ProcessParameters processParameters) {
+        final String linkId = dynamicValueProcessor.getDynamicStringValue(processParameters.getQuestionnaireResponseItem(), "linkId");
+        final Map<String, List<IBaseCoding>> coding = processParameters.getQuestionnaireCodeMap();
+        return CodeableConceptResolver.makeCodeableConcept(coding.get(linkId));
     }
 
-    List<CodeableConcept> getCategory() {
-        return Collections.singletonList(new CodeableConcept().addCoding(getCategoryCoding()));
+    List<IBaseElement> getCategory() {
+        final String codeSystem = "http://hl7.org/fhir/observation-category";
+        final String codeValue = "survey";
+        final IBaseElement codeableConcept = CodeableConceptResolver.makeCodeableConcept(codeSystem, codeValue);
+        return Collections.singletonList(codeableConcept);
     }
 
-    Coding getCategoryCoding() {
-        final Coding qrCategoryCoding = new Coding();
-        qrCategoryCoding.setCode("survey");
-        qrCategoryCoding.setSystem("http://hl7.org/fhir/observation-category");
-        return qrCategoryCoding;
-    }
-
-    Reference getEncounter(QuestionnaireResponse questionnaireResponse) {
-        return questionnaireResponse.getEncounter();
+    IBaseReference getEncounter(ProcessParameters processParameters) {
+        return dynamicValueProcessor.getDynamicReferenceValue(processParameters.getQuestionnaireResponse(), "encounter");
     }
     Type getEffective(QuestionnaireResponse questionnaireResponse) {
         return getAuthoredDate(questionnaireResponse);
     }
 
-    InstantType getIssued(QuestionnaireResponse questionnaireResponse) {
+    BaseDateTimeType getIssued(QuestionnaireResponse questionnaireResponse) {
         return new InstantType(getAuthoredDate(questionnaireResponse));
     }
 
-    DateTimeType getAuthoredDate(QuestionnaireResponse questionnaireResponse) {
+    BaseDateTimeType getAuthoredDate(ProcessParameters processParameters) {
+        final IBaseReference author = dynamicValueProcessor.getDynamicReferenceValue(processParameters.getQuestionnaireResponse(), "authored");
+        if (author != null) {
+            return new DateTimeType(author)
+        }
+
+
+
         return new DateTimeType((questionnaireResponse.hasAuthored()
             ? questionnaireResponse.getAuthored().toInstant()
             : Instant.now())
             .toString());
     }
 
-    List<Reference> getPerformer(QuestionnaireResponse questionnaireResponse) {
-        return Collections.singletonList(questionnaireResponse.getAuthor());
+    List<IBaseReference> getPerformer(ProcessParameters processParameters) {
+        final IBaseReference author = dynamicValueProcessor.getDynamicReferenceValue(processParameters.getQuestionnaireResponse(), "author");
+        return Collections.singletonList(author);
     }
 
-    List<Reference> getDerivedFrom(QuestionnaireResponse questionnaireResponse) {
-        return Collections.singletonList(new Reference(questionnaireResponse));
+    List<IBaseReference> getDerivedFrom(ProcessParameters processParameters) {
+        final IBaseReference reference = ReferenceResolver.makeReference(processParameters.getQuestionnaireResponse());
+        return Collections.singletonList(reference);
     }
 }

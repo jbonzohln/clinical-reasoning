@@ -1,6 +1,7 @@
 package org.opencds.cqf.fhir.cr.questionnaireresponse.common;
 
 import org.hl7.fhir.instance.model.api.IBaseBackboneElement;
+import org.hl7.fhir.instance.model.api.IBaseReference;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.opencds.cqf.cql.engine.model.ModelResolver;
 import java.util.ArrayList;
@@ -26,8 +27,23 @@ public class DynamicValueProcessor {
         return (IBaseBackboneElement) modelResolver.resolvePath(resource, path);
     }
 
+    public String getDynamicStringValue(IBaseBackboneElement resource, String path) {
+        // ROSIE TODO: check string conversion here
+        return modelResolver.resolvePath(resource, path).toString();
+    }
+
     public List<IBaseBackboneElement> getDynamicValues(IBaseBackboneElement resource, String path) {
         return getDynamicValues((IBaseResource) resource, path);
+    }
+
+    public List<IBaseReference> getDynamicReferenceValues(IBaseBackboneElement resource, String path) {
+        return getDynamicValues((IBaseResource) resource, path).stream()
+            .map(IBaseReference.class::cast)
+            .collect(Collectors.toList());
+    }
+
+    public IBaseReference getDynamicReferenceValue(IBaseBackboneElement resource, String path) {
+        return (IBaseReference) getDynamicValue(resource, path);
     }
 
     public List<IBaseBackboneElement> getDynamicValues(IBaseResource resource, String path) {

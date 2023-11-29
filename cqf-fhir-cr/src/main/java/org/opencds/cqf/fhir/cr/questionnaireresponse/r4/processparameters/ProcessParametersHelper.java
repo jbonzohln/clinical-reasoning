@@ -40,12 +40,12 @@ public class ProcessParametersHelper {
 
     @Nonnull
     private Optional<IBaseBackboneElement> getQuestionnaire(IBaseBackboneElement questionnaireResponse) {
-        final IBaseBackboneElement questionnaireCanonical = dynamicValueProcessor.getDynamicValue(questionnaireResponse, "questionnaire");
+        final String questionnaireCanonical = dynamicValueProcessor.getDynamicStringValue(questionnaireResponse, "questionnaire");
         if (questionnaireCanonical != null && !questionnaireCanonical.isEmpty()) {
             final IBaseBundle baseBundle = this.repository.search(
                 BundleResolver._getClass(),
                 QuestionnaireResolver._getClass(),
-                Searches.byCanonical(questionnaireCanonical.toString())
+                Searches.byCanonical(questionnaireCanonical)
             );
             final List<IBaseBackboneElement> bundleEntries = dynamicValueProcessor.getDynamicValues(baseBundle, "entry");
             if (!bundleEntries.isEmpty()) {

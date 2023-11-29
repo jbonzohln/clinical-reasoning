@@ -42,8 +42,8 @@ public class ProcessObservationItem {
 
     private boolean codingsExist(ProcessParameters processParameters) {
         final Map<String, List<IBaseCoding>> codeMap = processParameters.getQuestionnaireCodeMap();
-        final IBaseBackboneElement linkId = dynamicValueProcessor.getDynamicValue(processParameters.getQuestionnaireResponseItem(), "linkId");
-        final List<IBaseCoding> applicableCodings = codeMap.get(linkId.toString());
+        final String linkId = dynamicValueProcessor.getDynamicStringValue(processParameters.getQuestionnaireResponseItem(), "linkId");
+        final List<IBaseCoding> applicableCodings = codeMap.get(linkId);
         return applicableCodings != null && !applicableCodings.isEmpty();
     }
 

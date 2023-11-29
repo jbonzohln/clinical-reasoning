@@ -1,24 +1,24 @@
 package org.opencds.cqf.fhir.cr.questionnaireresponse.r4.processparameters;
 
-import org.hl7.fhir.Resource;
-import org.hl7.fhir.instance.model.api.IBaseBackboneElement;
+import org.hl7.fhir.QuestionnaireResponse;
+import org.hl7.fhir.QuestionnaireResponseItem;
+import org.hl7.fhir.Reference;
 import org.hl7.fhir.instance.model.api.IBaseCoding;
-import org.hl7.fhir.instance.model.api.IBaseReference;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import java.util.List;
 import java.util.Map;
 
 public class ProcessParameters {
-    private IBaseBackboneElement questionnaireResponseItem;
-    private final IBaseBackboneElement questionnaireResponse;
-    private IBaseReference subject;
+    private QuestionnaireResponseItem questionnaireResponseItem;
+    private final QuestionnaireResponse questionnaireResponse;
+    private Reference subject;
     private final List<IBaseResource> resources;
     private final Map<String, List<IBaseCoding>> questionnaireCodeMap;
 
     public ProcessParameters(
-        IBaseBackboneElement questionnaireResponseItem,
-        IBaseBackboneElement questionnaireResponse,
-        IBaseReference subject,
+        QuestionnaireResponseItem questionnaireResponseItem,
+        QuestionnaireResponse questionnaireResponse,
+        Reference subject,
         List<IBaseResource> resources,
         Map<String, List<IBaseCoding>> questionnaireCodeMap) {
         this.questionnaireResponseItem = questionnaireResponseItem;
@@ -28,15 +28,15 @@ public class ProcessParameters {
         this.questionnaireCodeMap = questionnaireCodeMap;
     }
 
-    public IBaseBackboneElement getQuestionnaireResponseItem() {
+    public QuestionnaireResponseItem getQuestionnaireResponseItem() {
         return questionnaireResponseItem;
     }
 
-    public IBaseBackboneElement getQuestionnaireResponse() {
+    public QuestionnaireResponse getQuestionnaireResponse() {
         return questionnaireResponse;
     }
 
-    public IBaseReference getSubject() {
+    public Reference getSubject() {
         return subject;
     }
 
@@ -48,10 +48,10 @@ public class ProcessParameters {
         return questionnaireCodeMap;
     }
 
-    public void setSubject(IBaseReference reference) {
+    public void setSubject(Reference reference) {
         this.subject = reference;
     }
-    public void setQuestionnaireResponseItem(IBaseBackboneElement item) {
+    public void setQuestionnaireResponseItem(QuestionnaireResponseItem item) {
         this.questionnaireResponseItem = item;
     }
 
