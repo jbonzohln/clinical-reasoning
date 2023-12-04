@@ -1,29 +1,48 @@
 package org.opencds.cqf.fhir.cr.questionnaireresponse.r4.observationbasedextraction;
 
+import org.hl7.fhir.instance.model.api.IBaseDatatype;
+import org.hl7.fhir.instance.model.api.IBaseElement;
+import org.hl7.fhir.instance.model.api.IBaseExtension;
+import org.hl7.fhir.instance.model.api.IBaseIBaseReference;
+import org.hl7.fhir.instance.model.api.IBaseReference;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Extension;
 import org.hl7.fhir.r4.model.InstantType;
 import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Observation.ObservationStatus;
-import org.hl7.fhir.r4.model.Reference;
+import org.hl7.fhir.r4.model.PrimitiveType;
+import org.hl7.fhir.r4.model.IBaseReference;
 import org.hl7.fhir.r4.model.Type;
 import javax.annotation.Nonnull;
+import java.util.Date;
 import java.util.List;
 
 public class ObservationBuilder {
+
+//    final List<IBaseIBaseReference> basedOn = getBasedOn(processParameters);
+//    final List<IBaseIBaseReference> partOf = getPartOf(processParameters);
+//    final List<IBaseElement> category = getCategory();
+//    final IBaseDatatype code = getCode(processParameters);
+//    final IBaseIBaseReference encounter = getEncounter(processParameters);
+//    final PrimitiveType<Date> effective = getAuthoredDate(processParameters);
+//    final PrimitiveType<Date> issued = getIssued(processParameters);
+//    final List<IBaseIBaseReference> performer = getPerformer(processParameters);
+//    final IBaseDatatype value = getValue(answer);
+//    final List<IBaseIBaseReference> derived = getDerivedFrom(processParameters);
+//    final IBaseExtension extension = getLinkExtension(processParameters);
     private String id;
-    private List<Reference> basedOn;
-    private List<Reference> partOf;
+    private List<IBaseReference> basedOn;
+    private List<IBaseReference> partOf;
     private ObservationStatus status;
-    private List<CodeableConcept> category;
-    private CodeableConcept code;
-    private Reference encounter;
-    private Reference subject;
+    private List<IBaseDatatype> category;
+    private IBaseDatatype code;
+    private IBaseReference encounter;
+    private IBaseReference subject;
     private Type effective;
     private InstantType issuedElement;
-    private List<Reference> performer;
+    private List<IBaseReference> performer;
     private Type value;
-    private List<Reference> derivedFrom;
+    private List<IBaseReference> derivedFrom;
     private Extension extension;
 
     @Nonnull
@@ -33,13 +52,13 @@ public class ObservationBuilder {
     }
 
     @Nonnull
-    ObservationBuilder basedOn(List<Reference> basedOn) {
+    ObservationBuilder basedOn(List<IBaseReference> basedOn) {
         this.basedOn = basedOn;
         return this;
     }
 
     @Nonnull
-    ObservationBuilder partOf(List<Reference> partOf) {
+    ObservationBuilder partOf(List<IBaseReference> partOf) {
         this.partOf = partOf;
         return this;
     }
@@ -63,13 +82,13 @@ public class ObservationBuilder {
     }
 
     @Nonnull
-    ObservationBuilder subject(Reference subject) {
+    ObservationBuilder subject(IBaseReference subject) {
         this.subject = subject;
         return this;
     }
 
     @Nonnull
-    ObservationBuilder encounter(Reference encounter) {
+    ObservationBuilder encounter(IBaseReference encounter) {
         this.encounter = encounter;
         return this;
     }
@@ -87,7 +106,7 @@ public class ObservationBuilder {
     }
 
     @Nonnull
-    ObservationBuilder performer(List<Reference> performer) {
+    ObservationBuilder performer(List<IBaseReference> performer) {
         this.performer = performer;
         return this;
     }
@@ -99,7 +118,7 @@ public class ObservationBuilder {
     }
 
     @Nonnull
-    ObservationBuilder derived(List<Reference> derivedFrom) {
+    ObservationBuilder derived(List<IBaseReference> derivedFrom) {
         this.derivedFrom = derivedFrom;
         return this;
     }

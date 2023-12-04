@@ -1,18 +1,21 @@
 package org.opencds.cqf.fhir.cr.questionnaireresponse.common;
 
 import org.hl7.fhir.instance.model.api.IBaseBackboneElement;
+import org.hl7.fhir.instance.model.api.IBaseDatatype;
+import org.hl7.fhir.instance.model.api.IBaseElement;
 import org.hl7.fhir.instance.model.api.IBaseReference;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IPrimitiveType;
 import org.opencds.cqf.cql.engine.model.ModelResolver;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ModelResolverService {
+public class ModelResolverGetterService {
     private final ModelResolver modelResolver;
 
-    public ModelResolverService(ModelResolver modelResolver) {
+    public ModelResolverGetterService(ModelResolver modelResolver) {
         this.modelResolver = modelResolver;
     }
 
@@ -24,8 +27,12 @@ public class ModelResolverService {
         return !getDynamicValues(resource, path).isEmpty();
     }
 
-    public IBaseBackboneElement getDynamicValue(IBaseBackboneElement resource, String path) {
+    public IBaseDatatype getDataTypeValue(IBaseBackboneElement resource, String path) {
+        // ROUTODO: FIX THESE
+        return (IBaseDatatype) modelResolver.resolvePath(resource, path);
+    }
 
+    public IBaseBackboneElement getDynamicValue(IBaseBackboneElement resource, String path) {
         return (IBaseBackboneElement) modelResolver.resolvePath(resource, path);
     }
 
@@ -50,6 +57,18 @@ public class ModelResolverService {
 
     public IBaseReference getDynamicReferenceValue(IBaseBackboneElement resource, String path) {
         return (IBaseReference) getDynamicValue(resource, path);
+    }
+
+    public IBaseElement getDynamicBaseElement(IBaseBackboneElement resource, String path) {
+        return (IBaseElement) getDynamicValue(resource, path);
+    }
+
+    public IBaseDatatype getDynamicDataType(IBaseBackboneElement resource, String path) {
+        return (IBaseDatatype) getDynamicValue(resource, path);
+    }
+
+    public IPrimitiveType<Date> getDynamicDateType(IBaseBackboneElement resource, String path) {
+        return (IPrimitiveType<Date>) getDynamicValue(resource, path);
     }
 
     public IBaseBackboneElement getDynamicValue(IBaseResource resource, String path) {
