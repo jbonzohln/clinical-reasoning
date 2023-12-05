@@ -1,18 +1,11 @@
 package org.opencds.cqf.fhir.cr.questionnaireresponse.r4.observationbasedextraction;
 
-import org.hl7.fhir.DateTime;
-import org.hl7.fhir.QuestionnaireResponseAnswer;
 import org.hl7.fhir.instance.model.api.IBaseBackboneElement;
 import org.hl7.fhir.instance.model.api.IBaseCoding;
 import org.hl7.fhir.instance.model.api.IBaseDatatype;
-import org.hl7.fhir.instance.model.api.IBaseElement;
-import org.hl7.fhir.instance.model.api.IBaseExtension;
 import org.hl7.fhir.instance.model.api.IBaseReference;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IPrimitiveType;
-//import org.hl7.fhir.r4.model.Observation;
-//import org.hl7.fhir.r4.model.Observation.ObservationStatus;
-import org.hl7.fhir.r4.model.QuestionnaireResponse.QuestionnaireResponseItemAnswerComponent;
 import org.opencds.cqf.fhir.cr.questionnaireresponse.common.ModelResolverGetterService;
 import org.opencds.cqf.fhir.cr.questionnaireresponse.common.ProcessorHelper;
 import org.opencds.cqf.fhir.cr.questionnaireresponse.common.ResourceBuilder;
@@ -29,9 +22,8 @@ class ObservationFactory {
     ProcessorHelper processorHelper;
     ModelResolverGetterService modelResolverGetterService;
     ResourceBuilder resourceBuilder;
-    static final ObservationStatus status = Observation.ObservationStatus.FINAL;
 
-    final Observation makeObservation(
+    final IBaseResource makeObservation(
         IBaseBackboneElement answer,
         ProcessParameters processParameters
     )
@@ -39,7 +31,7 @@ class ObservationFactory {
         final String id = getId(processParameters);
         final List<IBaseReference> basedOn = getBasedOn(processParameters);
         final List<IBaseReference> partOf = getPartOf(processParameters);
-        final List<IBaseElement> category = getCategory();
+        final List<IBaseDatatype> category = getCategory();
         final IBaseDatatype code = getCode(processParameters);
         final IBaseReference encounter = getEncounter(processParameters);
         final IPrimitiveType<Date> effective = getAuthoredDate(processParameters);
@@ -47,19 +39,19 @@ class ObservationFactory {
         final List<IBaseReference> performer = getPerformer(processParameters);
         final IBaseDatatype value = getValue(answer);
         final List<IBaseReference> derived = getDerivedFrom(processParameters);
-        final IBaseExtension extension = getLinkExtension(processParameters);
+        final List<IBaseDatatype> extension = getLinkExtension(processParameters);
         return new ObservationBuilder()
             .id(id)
             .basedOn(basedOn)
             .partOf(partOf)
             .performer(performer)
-            .status(status)
+            .status("final")
             .category(category)
             .code(code)
-            .subject(subject)
+            .subject(processParameters.getSubject())
             .encounter(encounter)
             .effective(effective)
-            .issuedElement(issued)
+            .issued(issued)
             .performer(performer)
             .value(value)
             .derived(derived)
@@ -69,7 +61,7 @@ class ObservationFactory {
 
     final String getId(ProcessParameters processParameters) {
         final IBaseBackboneElement linkId = modelResolverGetterService.getDynamicValue(processParameters.getQuestionnaireResponseItem(), "linkId");
-        final String extractId = processorHelper.getExtractId((IBaseResource) processParameters.getQuestionnaireResponse());
+        final String extractId = processorHelper.getExtractId(processParameters.getQuestionnaireResponse());
         return extractId + "." + linkId;
     }
 
@@ -81,13 +73,8 @@ class ObservationFactory {
         return modelResolverGetterService.getDynamicReferenceValues(processParameters.getQuestionnaireResponseItem(), "partOf");
     }
 
-    IBaseDatatype getValue(IBaseBackboneElement answer)
+    final IBaseDatatype getValue(IBaseBackboneElement answer)
         throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-
-        QuestionnaireResponseItemAnswerComponent
-
-
-//        final IPrimitiveType<Date> answerValue = modelResolverGetterService.getDynamicBaseDataType(answer, "value");
         final IBaseDatatype answerValue = modelResolverGetterService.getDynamicDataType(answer, "value");
         final String fhirType = answerValue.fhirType();
         switch (fhirType) {
@@ -100,16 +87,17 @@ class ObservationFactory {
         }
     }
 
-    IBaseExtension getLinkExtension(ProcessParameters processParameters)
+    final List<IBaseDatatype> getLinkExtension(ProcessParameters processParameters)
         throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         final String linkIdUrl = "http://hl7.org/fhir/uv/sdc/StructureDefinition/derivedFromLinkId";
         final String linkId = modelResolverGetterService.getDynamicStringValue(processParameters.getQuestionnaireResponseItem(), "linkId");
         final IPrimitiveType<String> linkIdAsStringType = resourceBuilder.makeBaseResource("StringType", linkId);
-        final IBaseExtension innerLinkIdExtension = resourceBuilder.makeExtension("text", linkIdAsStringType, null);
-        return resourceBuilder.makeExtension(linkIdUrl, null, innerLinkIdExtension);
+        final IBaseDatatype innerLinkIdExtension = resourceBuilder.makeExtension("text", linkIdAsStringType, null);
+        final IBaseDatatype extension = resourceBuilder.makeExtension(linkIdUrl, null, innerLinkIdExtension);
+        return Collections.singletonList(extension);
     }
 
-    IBaseDatatype getCode(ProcessParameters processParameters)
+    final IBaseDatatype getCode(ProcessParameters processParameters)
         throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         final String linkId = modelResolverGetterService.getDynamicStringValue(processParameters.getQuestionnaireResponseItem(), "linkId");
         final Map<String, List<IBaseCoding>> coding = processParameters.getQuestionnaireCodeMap();
@@ -119,24 +107,25 @@ class ObservationFactory {
         return resourceBuilder.makeCodeableConcept(codingsAsBaseDataType);
     }
 
-    List<IBaseElement> getCategory() {
+    final List<IBaseDatatype> getCategory()
+        throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         final String codeSystem = "http://hl7.org/fhir/observation-category";
         final String codeValue = "survey";
-        final IBaseElement codeableConcept = CodeableConceptResolver.makeCodeableConcept(codeSystem, codeValue);
+        final IBaseDatatype codeableConcept = resourceBuilder.makeCodeableConcept(codeSystem, codeValue);
         return Collections.singletonList(codeableConcept);
     }
 
-    IBaseReference getEncounter(ProcessParameters processParameters) {
+    final IBaseReference getEncounter(ProcessParameters processParameters) {
         return modelResolverGetterService.getDynamicReferenceValue(processParameters.getQuestionnaireResponse(), "encounter");
     }
 
-    IPrimitiveType<Date> getIssued(ProcessParameters processParameters)
+    final IPrimitiveType<Date> getIssued(ProcessParameters processParameters)
         throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         final IPrimitiveType<Date> authoredDate = getAuthoredDate(processParameters);
         return resourceBuilder.makeBaseResource("InstantType", authoredDate);
     }
 
-    IPrimitiveType<Date> getAuthoredDate(ProcessParameters processParameters)
+    final IPrimitiveType<Date> getAuthoredDate(ProcessParameters processParameters)
         throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         final IPrimitiveType<Date> authored = modelResolverGetterService.getDynamicDateType(processParameters.getQuestionnaireResponse(), "authored");
         if (authored != null) {
@@ -144,13 +133,14 @@ class ObservationFactory {
         }
         return resourceBuilder.makeDateTime(Instant.now().toString());}
 
-    List<IBaseReference> getPerformer(ProcessParameters processParameters) {
+    final List<IBaseReference> getPerformer(ProcessParameters processParameters) {
         final IBaseReference author = modelResolverGetterService.getDynamicReferenceValue(processParameters.getQuestionnaireResponse(), "author");
         return Collections.singletonList(author);
     }
 
-    List<IBaseReference> getDerivedFrom(ProcessParameters processParameters) {
-        final IBaseReference reference = ReferenceResolver.makeReference(processParameters.getQuestionnaireResponse());
+    final List<IBaseReference> getDerivedFrom(ProcessParameters processParameters)
+        throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+        final IBaseReference reference = resourceBuilder.makeReference(processParameters.getQuestionnaireResponse());
         return Collections.singletonList(reference);
     }
 }

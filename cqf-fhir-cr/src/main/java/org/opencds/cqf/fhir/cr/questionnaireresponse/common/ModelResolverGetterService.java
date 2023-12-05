@@ -1,5 +1,6 @@
 package org.opencds.cqf.fhir.cr.questionnaireresponse.common;
 
+import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseBackboneElement;
 import org.hl7.fhir.instance.model.api.IBaseDatatype;
 import org.hl7.fhir.instance.model.api.IBaseElement;
@@ -45,17 +46,28 @@ public class ModelResolverGetterService {
         return modelResolver.resolvePath(resource, path).toString();
     }
 
-    public List<IBaseBackboneElement> getDynamicValues(IBaseBackboneElement resource, String path) {
-        return getDynamicValues((IBaseResource) resource, path);
+    public String getDynamicStringValue(IBaseResource resource, String path) {
+        // ROSIE TODO: check string conversion here
+
+        final IPrimitiveType<String> ibase = getIBase();
+        ibase.getValue();
+
+        return modelResolver.resolvePath(resource, path).toString();
     }
 
-    public List<IBaseReference> getDynamicReferenceValues(IBaseBackboneElement resource, String path) {
-        return getDynamicValues((IBaseResource) resource, path).stream()
+    public List<IBaseResource> getDynamicValues(IBaseBackboneElement resource, String path) {
+
+        return getDynamicValues((IBaseResource) resource, path).stream().map(r -> (IBaseResource) r).collect(
+            Collectors.toList());
+    }
+
+    public List<IBaseReference> getDynamicReferenceValues(IBaseResource resource, String path) {
+        return getDynamicValues(resource, path).stream()
             .map(IBaseReference.class::cast)
             .collect(Collectors.toList());
     }
 
-    public IBaseReference getDynamicReferenceValue(IBaseBackboneElement resource, String path) {
+    public IBaseReference getDynamicReferenceValue(IBaseResource resource, String path) {
         return (IBaseReference) getDynamicValue(resource, path);
     }
 
@@ -67,12 +79,27 @@ public class ModelResolverGetterService {
         return (IBaseDatatype) getDynamicValue(resource, path);
     }
 
-    public IPrimitiveType<Date> getDynamicDateType(IBaseBackboneElement resource, String path) {
+    public IPrimitiveType<Date> getDynamicDateType(IBaseResource resource, String path) {
         return (IPrimitiveType<Date>) getDynamicValue(resource, path);
+    }
+
+    public IPrimitiveType<String> getDynamicStringType(IBaseResource resource, String path) {
+        return (IPrimitiveType<String>) getDynamicValue(resource, path);
     }
 
     public IBaseBackboneElement getDynamicValue(IBaseResource resource, String path) {
         // todo: check if list, or check if single value
+        final List<IBaseBackboneElement> dynamicValues = new ArrayList<>();
+        final Object pathResult = modelResolver.resolvePath(resource, path);
+        var list = (pathResult instanceof List ? (List<?>) pathResult : null);
+        if (list != null && !list.isEmpty()) {
+            dynamicValues.addAll(
+                list.stream().map(o -> (IBaseBackboneElement) o).collect(Collectors.toList()));
+        }
+        return dynamicValues;
+    }
+
+    public List<IBaseResource> getDynamicResourceValues(IBaseResource resource, String path) {
         final List<IBaseBackboneElement> dynamicValues = new ArrayList<>();
         final Object pathResult = modelResolver.resolvePath(resource, path);
         var list = (pathResult instanceof List ? (List<?>) pathResult : null);

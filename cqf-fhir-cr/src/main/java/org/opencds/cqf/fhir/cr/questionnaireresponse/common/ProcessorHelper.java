@@ -9,16 +9,6 @@ public class ProcessorHelper {
         return "extract-" + (questionnaireResponse).getIdElement().getIdPart();
     }
 
-    public IBaseResource newValue(String type) {
-        try {
-            return (IBaseResource) Class.forName("org.hl7.fhir.r4.model." + type)
-                .getConstructor()
-                .newInstance();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public boolean hasExtension(IBaseBackboneElement item, String url) {
         return item.getExtension().stream()
             .map(IBaseExtension::getUrl)

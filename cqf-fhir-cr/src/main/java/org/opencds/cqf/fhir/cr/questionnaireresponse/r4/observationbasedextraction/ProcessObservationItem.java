@@ -6,6 +6,7 @@ import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.opencds.cqf.fhir.cr.questionnaireresponse.common.ModelResolverGetterService;
 import org.opencds.cqf.fhir.cr.questionnaireresponse.r4.processparameters.ProcessParameters;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 
@@ -21,12 +22,21 @@ public class ProcessObservationItem {
         validate(processParameters);
         final List<IBaseBackboneElement> answers = modelResolverGetterService.getDynamicValues(processParameters.getQuestionnaireResponseItem(), "answer");
         if (!answers.isEmpty()) {
-            answers.forEach(answer -> processAnswer(processParameters, answer));
+            answers.forEach(answer -> {
+                try {
+                    processAnswer(processParameters, answer);
+                } catch (InvocationTargetException | NoSuchMethodException | InstantiationException |
+                         IllegalAccessException e) {
+                    // TODO: WHAT ERROR TO THROW HERE?
+                    throw new RuntimeException(e);
+                }
+            });
         }
     }
 
-    private void processAnswer(ProcessParameters processParameters, IBaseBackboneElement answer) {
-        final List<IBaseBackboneElement> answerItems = modelResolverGetterService.getDynamicValues(answer, "item");
+    private void processAnswer(ProcessParameters processParameters, IBaseBackboneElement answer)
+        throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+        final List<IBaseResource> answerItems = modelResolverGetterService.getDynamicValues(answer, "item");
         if (!answerItems.isEmpty()) {
             answerItems.forEach(answerItem -> {
                 processParameters.setQuestionnaireResponseItem(answerItem);

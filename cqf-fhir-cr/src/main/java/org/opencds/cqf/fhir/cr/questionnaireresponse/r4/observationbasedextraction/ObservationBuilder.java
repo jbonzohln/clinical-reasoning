@@ -1,49 +1,32 @@
 package org.opencds.cqf.fhir.cr.questionnaireresponse.r4.observationbasedextraction;
 
 import org.hl7.fhir.instance.model.api.IBaseDatatype;
-import org.hl7.fhir.instance.model.api.IBaseElement;
-import org.hl7.fhir.instance.model.api.IBaseExtension;
-import org.hl7.fhir.instance.model.api.IBaseIBaseReference;
 import org.hl7.fhir.instance.model.api.IBaseReference;
-import org.hl7.fhir.r4.model.CodeableConcept;
-import org.hl7.fhir.r4.model.Extension;
-import org.hl7.fhir.r4.model.InstantType;
-import org.hl7.fhir.r4.model.Observation;
-import org.hl7.fhir.r4.model.Observation.ObservationStatus;
-import org.hl7.fhir.r4.model.PrimitiveType;
-import org.hl7.fhir.r4.model.IBaseReference;
-import org.hl7.fhir.r4.model.Type;
+import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.instance.model.api.IPrimitiveType;
+import org.opencds.cqf.fhir.cr.questionnaireresponse.common.ResourceBuilder;
 import javax.annotation.Nonnull;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 import java.util.List;
 
 public class ObservationBuilder {
-
-//    final List<IBaseIBaseReference> basedOn = getBasedOn(processParameters);
-//    final List<IBaseIBaseReference> partOf = getPartOf(processParameters);
-//    final List<IBaseElement> category = getCategory();
-//    final IBaseDatatype code = getCode(processParameters);
-//    final IBaseIBaseReference encounter = getEncounter(processParameters);
-//    final PrimitiveType<Date> effective = getAuthoredDate(processParameters);
-//    final PrimitiveType<Date> issued = getIssued(processParameters);
-//    final List<IBaseIBaseReference> performer = getPerformer(processParameters);
-//    final IBaseDatatype value = getValue(answer);
-//    final List<IBaseIBaseReference> derived = getDerivedFrom(processParameters);
-//    final IBaseExtension extension = getLinkExtension(processParameters);
+    // TODO: fix observationstatus field
     private String id;
     private List<IBaseReference> basedOn;
     private List<IBaseReference> partOf;
-    private ObservationStatus status;
+    private String status;
     private List<IBaseDatatype> category;
     private IBaseDatatype code;
     private IBaseReference encounter;
     private IBaseReference subject;
-    private Type effective;
-    private InstantType issuedElement;
+    private IPrimitiveType<Date> effective;
+    private IPrimitiveType<Date> issued;
     private List<IBaseReference> performer;
-    private Type value;
+    private IBaseDatatype value;
     private List<IBaseReference> derivedFrom;
-    private Extension extension;
+    private List<IBaseDatatype> extension;
+    ResourceBuilder resourceBuilder;
 
     @Nonnull
     ObservationBuilder id(String id) {
@@ -64,19 +47,19 @@ public class ObservationBuilder {
     }
 
     @Nonnull
-    ObservationBuilder status(ObservationStatus status) {
+    ObservationBuilder status(String status) {
         this.status = status;
         return this;
     }
 
     @Nonnull
-    ObservationBuilder category(List<CodeableConcept> category) {
+    ObservationBuilder category(List<IBaseDatatype> category) {
         this.category = category;
         return this;
     }
 
     @Nonnull
-    ObservationBuilder code(CodeableConcept code) {
+    ObservationBuilder code(IBaseDatatype code) {
         this.code = code;
         return this;
     }
@@ -94,14 +77,14 @@ public class ObservationBuilder {
     }
 
     @Nonnull
-    ObservationBuilder effective(Type effective) {
+    ObservationBuilder effective(IPrimitiveType<Date> effective) {
         this.effective = effective;
         return this;
     }
 
     @Nonnull
-    ObservationBuilder issuedElement(InstantType issued) {
-        this.issuedElement = issued;
+    ObservationBuilder issued(IPrimitiveType<Date> issued) {
+        this.issued = issued;
         return this;
     }
 
@@ -112,7 +95,7 @@ public class ObservationBuilder {
     }
 
     @Nonnull
-    ObservationBuilder value(Type value) {
+    ObservationBuilder value(IBaseDatatype value) {
         this.value = value;
         return this;
     }
@@ -124,28 +107,69 @@ public class ObservationBuilder {
     }
 
     @Nonnull
-    ObservationBuilder extension(Extension extension) {
+    ObservationBuilder extension(List<IBaseDatatype> extension) {
         this.extension = extension;
         return this;
     }
 
     @Nonnull
-    Observation build() {
-        final Observation observation = new Observation();
-        observation.setId(this.id);
-        observation.setBasedOn(this.basedOn);
-        observation.setPartOf(this.partOf);
-        observation.setStatus(this.status);
-        observation.setCategory(this.category);
-        observation.setCode(this.code);
-        observation.setEncounter(this.encounter);
-        observation.setSubject(this.subject);
-        observation.setEffective(this.effective);
-        observation.setIssuedElement(this.issuedElement);
-        observation.setPerformer(this.performer);
-        observation.setValue(this.value);
-        observation.setDerivedFrom(this.derivedFrom);
-        observation.setExtension(List.of(this.extension));
-        return observation;
+    IBaseResource build()
+        throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+        return resourceBuilder.makeObservation(this);
+    }
+
+    public String getId() {
+        return id;
+    }
+    public List<IBaseReference> getBasedOn() {
+        return basedOn;
+    }
+
+    public List<IBaseReference> getPartOf() {
+        return partOf;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public List<IBaseDatatype> getCategory() {
+        return category;
+    }
+
+    public IBaseDatatype getCode() {
+        return code;
+    }
+
+    public IBaseReference getEncounter() {
+        return encounter;
+    }
+
+    public IBaseReference getSubject() {
+        return subject;
+    }
+
+    public IPrimitiveType<Date> getEffective() {
+        return effective;
+    }
+
+    public IPrimitiveType<Date> getIssued() {
+        return issued;
+    }
+
+    public List<IBaseReference> getPerformer() {
+        return performer;
+    }
+
+    public IBaseDatatype getValue() {
+        return value;
+    }
+
+    public List<IBaseReference> getDerivedFrom() {
+        return derivedFrom;
+    }
+
+    public List<IBaseDatatype> getExtension() {
+        return extension;
     }
 }

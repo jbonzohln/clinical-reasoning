@@ -1,6 +1,9 @@
 package org.opencds.cqf.fhir.cr.questionnaireresponse.r4.defintionbasedextraction;
 
 import ca.uhn.fhir.context.BaseRuntimeElementDefinition;
+import org.hl7.fhir.instance.model.api.IBaseDatatype;
+import org.hl7.fhir.instance.model.api.IBaseMetaType;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Meta;
 import org.hl7.fhir.r4.model.Property;
@@ -21,12 +24,12 @@ class ResourceBuilder {
     private static final String PROPERTY_SETTING_ERROR_MESSAGE = "Error encountered attempting to set property (%s) on resource type (%s): %s";
     private final PropertyHelper propertyHelper = new PropertyHelper();
     ModelResolver modelResolver;
-    private Resource baseResource;
+    private IBaseResource baseResource;
     private String resourceType;
-    private QuestionnaireResponseItemComponent questionnaireResponseItem;
+    private IBaseResource questionnaireResponseItem;
     private Date authoredDate;
-    private IdType id;
-    private Meta meta;
+    private IBaseDatatype id;
+    private IBaseMetaType meta;
     private Property subjectProperty;
     private Reference subjectPropertyValue;
     private Property authorProperty;
@@ -34,67 +37,67 @@ class ResourceBuilder {
     private List<Property> dateProperties;
 
     @Nonnull
-    ResourceBuilder setBaseResource(Resource resource) {
+    ResourceBuilder baseResource(IBaseResource resource) {
         this.baseResource = resource;
         return this;
     }
 
     @Nonnull
-    ResourceBuilder setResourceType(String resourceType) {
+    ResourceBuilder resourceType(String resourceType) {
         this.resourceType = resourceType;
         return this;
     }
 
     @Nonnull
-    ResourceBuilder setQuestionnaireResponseItem(QuestionnaireResponseItemComponent questionnaireResponseItem) {
+    ResourceBuilder questionnaireResponseItem(IBaseResource questionnaireResponseItem) {
         this.questionnaireResponseItem = questionnaireResponseItem;
         return this;
     }
 
     @Nonnull
-    ResourceBuilder setAuthoredDate(Date authoredDate) {
+    ResourceBuilder authoredDate(Date authoredDate) {
         this.authoredDate = authoredDate;
         return this;
     }
 
     @Nonnull
-    ResourceBuilder setId(IdType id) {
+    ResourceBuilder id(IdType id) {
         this.id = id;
         return this;
     }
 
     @Nonnull
-    ResourceBuilder setMeta(Meta meta) {
+    ResourceBuilder meta(Meta meta) {
         this.meta = meta;
         return this;
     }
 
     @Nonnull
-    ResourceBuilder setSubjectPropertyValue(Reference subject) {
+    ResourceBuilder subjectPropertyValue(Reference subject) {
         this.subjectPropertyValue = subject;
         return this;
     }
 
     @Nonnull
-    ResourceBuilder setAuthorPropertyValue(Reference author) {
+    ResourceBuilder authorPropertyValue(Reference author) {
         this.authorPropertyValue = author;
         return this;
     }
 
     @Nonnull
-    ResourceBuilder setSubjectProperty(Property subjectProperty) {
+    ResourceBuilder subjectProperty(Property subjectProperty) {
         this.subjectProperty = subjectProperty;
         return this;
     }
 
     @Nonnull
-    ResourceBuilder setAuthorProperty(Property authorProperty) {
+    ResourceBuilder authorProperty(Property authorProperty) {
         this.authorProperty = authorProperty;
         return this;
     }
 
     @Nonnull
-    ResourceBuilder setDateProperties(List<Property> dateProperties) {
+    ResourceBuilder dateProperties(List<Property> dateProperties) {
         this.dateProperties = dateProperties;
         return this;
     }
@@ -153,11 +156,18 @@ class ResourceBuilder {
 
     private Object getDatePropertyValue(Property property)
         throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        final BaseRuntimeElementDefinition propertyDef = propertyHelper.getPropertyDefinition(property);
+        final BaseRuntimeElementDefinition propertyDef = getPropertyDefinition(property);
         return propertyDef
             .getImplementingClass()
             .getConstructor(Date.class)
             .newInstance(authoredDate);
+    }
+
+    private BaseRuntimeElementDefinition getPropertyDefinition(Property property) {
+        return repository.fhirContext().getElementDefinition(
+            property.getTypeCode().contains("|")
+                ? property.getTypeCode().split("\\|")[0]
+                : property.getTypeCode());
     }
 
     void setPropertyValueWithModelResolver(String propertyName, Object propertyValue) {

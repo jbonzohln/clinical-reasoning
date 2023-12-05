@@ -21,7 +21,7 @@ public class ProcessDefinitionItem {
 
     protected static final Logger logger = LoggerFactory.getLogger(ProcessDefinitionItem.class);
     private static final String EXPRESSION_EVALUATION_ERROR_MESSAGE = "Error encountered evaluating expression (%s) for item (%s): %s";
-    private final ResourceFactory resourceFactory = new ResourceFactory();
+    private final ResourceFactory resourceFactory = new ResourceFactory(modelResolverGetterService);
     String libraryUrl;
     LibraryEngine libraryEngine;
     String patientId;

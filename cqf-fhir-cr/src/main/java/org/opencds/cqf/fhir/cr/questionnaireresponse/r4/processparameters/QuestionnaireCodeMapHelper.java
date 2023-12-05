@@ -2,6 +2,7 @@ package org.opencds.cqf.fhir.cr.questionnaireresponse.r4.processparameters;
 
 import org.hl7.fhir.instance.model.api.IBaseBackboneElement;
 import org.hl7.fhir.instance.model.api.IBaseCoding;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.opencds.cqf.fhir.cr.questionnaireresponse.common.ModelResolverGetterService;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ class QuestionnaireCodeMapHelper {
     }
     @Nonnull
     Map<String, List<IBaseCoding>> createCodeMap(@Nonnull IBaseBackboneElement questionnaire) {
-        final List<IBaseBackboneElement> questionnaireItems = modelResolverGetterService.getDynamicValues(questionnaire, "entry");
+        final List<IBaseResource> questionnaireItems = modelResolverGetterService.getDynamicValues(questionnaire, "entry");
         final List<QuestionnaireCodeMap> questionnaireCodeMap = questionnaireItems.stream()
             .map(this::buildQuestionnaireCodeMap)
             .flatMap(List::stream)
@@ -43,9 +44,9 @@ class QuestionnaireCodeMapHelper {
     }
 
 
-    private List<QuestionnaireCodeMap> buildQuestionnaireCodeMap(IBaseBackboneElement item) {
+    private List<QuestionnaireCodeMap> buildQuestionnaireCodeMap(IBaseResource item) {
         final List<QuestionnaireCodeMap> questionnaireCodeMap = new ArrayList<>();
-        final List<IBaseBackboneElement> subItems = modelResolverGetterService.getDynamicValues(item, "item");
+        final List<IBaseResource> subItems = modelResolverGetterService.getDynamicResourceValues(item, "item");
         if (!subItems.isEmpty()) {
             subItems.forEach(subItem -> {
                 final List<QuestionnaireCodeMap> codeMap = buildQuestionnaireCodeMap(subItem);
