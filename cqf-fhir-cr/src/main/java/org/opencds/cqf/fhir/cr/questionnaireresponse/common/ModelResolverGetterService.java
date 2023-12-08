@@ -1,12 +1,18 @@
 package org.opencds.cqf.fhir.cr.questionnaireresponse.common;
 
+import ca.uhn.fhir.context.BaseRuntimeChildDefinition;
+import ca.uhn.fhir.context.BaseRuntimeElementCompositeDefinition;
+import ca.uhn.fhir.context.FhirContext;
+import org.hl7.fhir.instance.model.api.IAnyResource;
 import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseBackboneElement;
 import org.hl7.fhir.instance.model.api.IBaseDatatype;
 import org.hl7.fhir.instance.model.api.IBaseElement;
 import org.hl7.fhir.instance.model.api.IBaseReference;
 import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.instance.model.api.ICompositeType;
 import org.hl7.fhir.instance.model.api.IPrimitiveType;
+import org.opencds.cqf.cql.engine.fhir.exception.UnknownType;
 import org.opencds.cqf.cql.engine.model.ModelResolver;
 import java.util.ArrayList;
 import java.util.Date;
@@ -119,6 +125,26 @@ public class ModelResolverGetterService {
                 list.stream().map(o -> (IBaseBackboneElement) o).collect(Collectors.toList()));
         }
         return dynamicValues;
+    }
+
+    public boolean hasPropertyName(IBase theResource, String path, FhirContext fhirContext) {
+        final BaseRuntimeElementCompositeDefinition<?> definition = this.resolveRuntimeDefinition(theResource, fhirContext);
+        final BaseRuntimeChildDefinition child = definition.getChildByName(path);
+        return child != null;
+    }
+
+    private BaseRuntimeElementCompositeDefinition<?> resolveRuntimeDefinition(IBase base, FhirContext fhirContext) {
+        if (base instanceof IAnyResource) {
+            return fhirContext.getResourceDefinition((IAnyResource)base);
+        } else if (!(base instanceof IBaseBackboneElement) && !(base instanceof IBaseElement)) {
+            if (base instanceof ICompositeType) {
+                return (BaseRuntimeElementCompositeDefinition) fhirContext.getElementDefinition(base.getClass());
+            } else {
+                throw new UnknownType(String.format("Unable to resolve the runtime definition for %s", base.getClass().getName()));
+            }
+        } else {
+            return (BaseRuntimeElementCompositeDefinition) fhirContext.getElementDefinition(base.getClass());
+        }
     }
 
 }
