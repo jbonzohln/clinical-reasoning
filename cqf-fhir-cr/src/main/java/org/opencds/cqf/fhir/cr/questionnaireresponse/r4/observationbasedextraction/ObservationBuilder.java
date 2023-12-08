@@ -115,7 +115,7 @@ public class ObservationBuilder {
     @Nonnull
     IBaseResource build()
         throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-        return resourceBuilder.makeObservation(this);
+        return resourceBuilder.makeObservationBasedResource(this);
     }
 
     public String getId() {

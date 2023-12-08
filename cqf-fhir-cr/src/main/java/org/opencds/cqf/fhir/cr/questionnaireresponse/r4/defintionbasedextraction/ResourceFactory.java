@@ -17,6 +17,7 @@ import org.opencds.cqf.fhir.cr.questionnaireresponse.r4.processparameters.Proces
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -35,16 +36,16 @@ class ResourceFactory {
         this.myRepository = myRepository;
     }
 
-    Resource makeResource(ProcessParameters processParameters)
+    IBaseResource makeResource(ProcessParameters processParameters)
         throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         final String resourceType = getResourceType(processParameters);
         final IBaseResource baseResource = resourceBuilder.makeBaseResource(resourceType);
         final IBaseDatatype id = makeId(processParameters);
         final IBaseMetaType meta = makeMeta(processParameters);
-        final Map<String, IBaseReference> subject = getSubjectProperty(baseResource, processParameters);
-        final IBaseBackboneElement authorProperty = getAuthorProperty(baseResource);
         final IPrimitiveType<Date> authoredDate = getAuthoredDate(processParameters);
-        final List<Property> dateProperties = getDateProperties(baseResource);
+        final Map<String, IBaseReference> subject = getSubjectProperty(baseResource, processParameters);
+        final Map<String, IBaseReference> author = getAuthorProperty(baseResource, processParameters);
+//        final List<Property> dateProperties = getDateProperties(baseResource);
         return new DefinitionBasedResourceBuilder()
             .baseResource(baseResource)
             .resourceType(resourceType)
@@ -53,9 +54,8 @@ class ResourceFactory {
             .id(id)
             .meta(meta)
             .subject(subject)
-            .setAuthorProperty(authorProperty)
-            .setAuthorPropertyValue(processParameters.getQuestionnaireResponseResolver().getAuthor())
-            .setDateProperties(dateProperties)
+            .author(author)
+//            .setDateProperties(dateProperties)
             .build();
     }
 
@@ -106,9 +106,9 @@ class ResourceFactory {
         final String subjectPropertyPath = getSubjectPropertyPath(resource);
         final IBaseBackboneElement subjectProperty = modelResolverGetterService.getDynamicValue(resource, subjectPropertyPath);
         if (subjectProperty != null) {
-            return Map.of(subjectPropertyPath, processParameters.getSubject())
+            return Map.of(subjectPropertyPath, processParameters.getSubject());
         }
-        return null;
+        return Collections.emptyMap();
     }
 
     String getSubjectPropertyPath(IBaseResource resource) {
@@ -119,9 +119,14 @@ class ResourceFactory {
         return NamedProperties.SUBJECT;
     }
 
-    IBaseBackboneElement getAuthorProperty(IBaseResource resource) {
+    Map<String, IBaseReference> getAuthorProperty(IBaseResource resource, ProcessParameters processParameters) {
         final String authorPropertyPath = getAuthorPropertyPath(resource);
-        return modelResolverGetterService.getDynamicValue(resource, authorPropertyPath);
+        final IBaseReference questionnaireResponseAuthor = modelResolverGetterService.getDynamicReferenceValue(processParameters.getQuestionnaireResponse(), "author");
+        final IBaseBackboneElement authorProperty = modelResolverGetterService.getDynamicValue(resource, authorPropertyPath);
+        if (authorProperty != null) {
+            return Map.of(authorPropertyPath, questionnaireResponseAuthor);
+        }
+        return Collections.emptyMap();
     }
 
     String getAuthorPropertyPath(IBaseResource resource) {

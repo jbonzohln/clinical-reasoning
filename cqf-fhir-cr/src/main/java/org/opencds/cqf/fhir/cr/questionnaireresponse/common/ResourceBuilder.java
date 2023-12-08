@@ -2,22 +2,17 @@ package org.opencds.cqf.fhir.cr.questionnaireresponse.common;
 
 import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.instance.model.api.IBaseDatatype;
-import org.hl7.fhir.instance.model.api.IBaseExtension;
 import org.hl7.fhir.instance.model.api.IBaseMetaType;
 import org.hl7.fhir.instance.model.api.IBaseReference;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IPrimitiveType;
-import org.hl7.fhir.r4.model.DateType;
-import org.hl7.fhir.r4.model.Observation;
-import org.hl7.fhir.r4.model.Reference;
-import org.hl7.fhir.r4.model.Type;
-import org.hl7.fhir.r4.model.codesystems.ObservationStatus;
 import org.opencds.cqf.fhir.api.Repository;
+import org.opencds.cqf.fhir.cr.questionnaireresponse.r4.defintionbasedextraction.DefinitionBasedResourceBuilder;
 import org.opencds.cqf.fhir.cr.questionnaireresponse.r4.observationbasedextraction.ObservationBuilder;
-import javax.lang.model.type.PrimitiveType;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public class ResourceBuilder {
     Repository repository;
@@ -37,7 +32,23 @@ public class ResourceBuilder {
         return makeBaseResource("IdType", resourceType, id);
     }
 
-    public IBaseResource makeObservation(ObservationBuilder observationBuilder)
+    public IBaseResource makeDefinitionBasedResource(
+        DefinitionBasedResourceBuilder resourceBuilder) {
+        final IBaseResource baseResource = resourceBuilder.getBaseResource();
+        modelResolverSetterService.setProperty(baseResource, "id", resourceBuilder.getId());
+        modelResolverSetterService.setProperty(baseResource, "meta", resourceBuilder.getMeta());
+        final Map<String, IBaseReference> subjectProperty = resourceBuilder.getSubject();
+        if (!subjectProperty.isEmpty()) {
+            subjectProperty.keySet().forEach(key -> modelResolverSetterService.setProperty(baseResource, key, subjectProperty.get(key)));
+        }
+        final Map<String, IBaseReference> authorProperty = resourceBuilder.getAuthor();
+        if (!authorProperty.isEmpty()) {
+            authorProperty.keySet().forEach(key -> modelResolverSetterService.setProperty(baseResource, key, authorProperty.get(key)));
+        }
+        return baseResource;
+    }
+
+    public IBaseResource makeObservationBasedResource(ObservationBuilder observationBuilder)
         throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         final IBaseResource observation = makeBaseResource("Observation");
         modelResolverSetterService.setProperty(observation, "id", observationBuilder.getId());
