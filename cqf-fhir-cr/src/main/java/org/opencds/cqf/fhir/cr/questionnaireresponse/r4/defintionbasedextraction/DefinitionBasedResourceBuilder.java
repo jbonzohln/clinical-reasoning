@@ -3,6 +3,7 @@ package org.opencds.cqf.fhir.cr.questionnaireresponse.r4.defintionbasedextractio
 import ca.uhn.fhir.context.BaseRuntimeElementDefinition;
 import org.hl7.fhir.instance.model.api.IBaseDatatype;
 import org.hl7.fhir.instance.model.api.IBaseMetaType;
+import org.hl7.fhir.instance.model.api.IBaseReference;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IPrimitiveType;
 import org.hl7.fhir.r4.model.IdType;
@@ -19,6 +20,7 @@ import javax.annotation.Nonnull;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 class DefinitionBasedResourceBuilder {
     protected static final Logger logger = LoggerFactory.getLogger(DefinitionBasedResourceBuilder.class);
@@ -30,8 +32,7 @@ class DefinitionBasedResourceBuilder {
     private IPrimitiveType<Date> authoredDate;
     private IBaseDatatype id;
     private IBaseMetaType meta;
-    private Property subjectProperty;
-    private Reference subjectPropertyValue;
+    private Map<String, IBaseReference> subject;
     private Property authorProperty;
     private Reference authorPropertyValue;
     private List<Property> dateProperties;
@@ -73,20 +74,14 @@ class DefinitionBasedResourceBuilder {
     }
 
     @Nonnull
-    DefinitionBasedResourceBuilder subjectPropertyValue(Reference subject) {
-        this.subjectPropertyValue = subject;
+    DefinitionBasedResourceBuilder subject(Map<String, IBaseReference> subject) {
+        this.subject = subject;
         return this;
     }
 
     @Nonnull
     DefinitionBasedResourceBuilder authorPropertyValue(Reference author) {
         this.authorPropertyValue = author;
-        return this;
-    }
-
-    @Nonnull
-    DefinitionBasedResourceBuilder subjectProperty(Property subjectProperty) {
-        this.subjectProperty = subjectProperty;
         return this;
     }
 

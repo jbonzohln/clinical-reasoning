@@ -3,6 +3,7 @@ package org.opencds.cqf.fhir.cr.questionnaireresponse.r4.defintionbasedextractio
 import org.hl7.fhir.instance.model.api.IBaseBackboneElement;
 import org.hl7.fhir.instance.model.api.IBaseDatatype;
 import org.hl7.fhir.instance.model.api.IBaseMetaType;
+import org.hl7.fhir.instance.model.api.IBaseReference;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IPrimitiveType;
 import org.hl7.fhir.r4.model.Enumerations.FHIRAllTypes;
@@ -18,6 +19,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -39,7 +41,7 @@ class ResourceFactory {
         final IBaseResource baseResource = resourceBuilder.makeBaseResource(resourceType);
         final IBaseDatatype id = makeId(processParameters);
         final IBaseMetaType meta = makeMeta(processParameters);
-        final IBaseBackboneElement subjectProperty = getSubjectProperty(baseResource);
+        final Map<String, IBaseReference> subject = getSubjectProperty(baseResource, processParameters);
         final IBaseBackboneElement authorProperty = getAuthorProperty(baseResource);
         final IPrimitiveType<Date> authoredDate = getAuthoredDate(processParameters);
         final List<Property> dateProperties = getDateProperties(baseResource);
@@ -50,8 +52,7 @@ class ResourceFactory {
             .questionnaireResponseItem(processParameters.getQuestionnaireResponseItem())
             .id(id)
             .meta(meta)
-            .setSubjectProperty(subjectProperty)
-            .setSubjectPropertyValue(processParameters.getSubjectResolver())
+            .subject(subject)
             .setAuthorProperty(authorProperty)
             .setAuthorPropertyValue(processParameters.getQuestionnaireResponseResolver().getAuthor())
             .setDateProperties(dateProperties)
@@ -101,9 +102,13 @@ class ResourceFactory {
         return results.stream().filter(Objects::nonNull).collect(Collectors.toList());
     }
 
-    IBaseBackboneElement getSubjectProperty(IBaseResource resource) {
+    Map<String, IBaseReference> getSubjectProperty(IBaseResource resource, ProcessParameters processParameters) {
         final String subjectPropertyPath = getSubjectPropertyPath(resource);
-        return modelResolverGetterService.getDynamicValue(resource, subjectPropertyPath);
+        final IBaseBackboneElement subjectProperty = modelResolverGetterService.getDynamicValue(resource, subjectPropertyPath);
+        if (subjectProperty != null) {
+            return Map.of(subjectPropertyPath, processParameters.getSubject())
+        }
+        return null;
     }
 
     String getSubjectPropertyPath(IBaseResource resource) {
